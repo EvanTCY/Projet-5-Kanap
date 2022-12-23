@@ -16,26 +16,42 @@ async function getProductElements(){
     let url = new URL(urlProductPage);
     let productId = url.searchParams.get("id");
     
-    // récupération de l'index produit via le l'id du produit
-    let productIndex = products.findIndex(function(item, i){
-        return item._id === productId
+    // récupération de l'index produit via l'id du produit
+    let productIndex = products.findIndex(function(product, i){
+        return product._id === productId
       });
     // source : https://stackoverflow.com/questions/36419195/how-can-i-get-the-index-from-a-json-object-with-value
 
-    let itemImg = document.querySelector('.item__img');
+    // localisation des éléments parents pour y intégrer le contenu
+    let itemImg = document.querySelector('.item__img');  /*QUESTION TOUT EN BAS, POUR CETTE LIGNE*/
     let productTitle = document.getElementById('title');
     let productPrice = document.getElementById('price');
     let productDescription = document.getElementById('description');
 
     let newImg = document.createElement('img');
-
     itemImg.appendChild(newImg);
 
+    // intégration des informations sur le produit
     newImg.src = products[productIndex].imageUrl;
     newImg.alt = products[productIndex].altTxt;
     productTitle.innerText = products[productIndex].name;
     productPrice.innerText = products[productIndex].price;
     productDescription.innerText = products[productIndex].description;
+
+    // itération des options disponnibles en fonction de l'index produit sélectionné
+    for(let colors of products[productIndex].colors){
+
+        let productOption = document.getElementById('colors');
+        let newOption = document.createElement('option')
+        productOption.appendChild(newOption);
+
+        newOption.value = colors;
+        newOption.innerText = colors;
+  
+    }
+    
 }
 
 getProductElements();
+
+// POURQUOI LE "APPENCHILD" NE MARCHE PAS AVEC UN "GETELEMENTSBYCLASSENAME"

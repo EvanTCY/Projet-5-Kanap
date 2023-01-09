@@ -1,5 +1,5 @@
 // fonction fetch + convertion des données en format .json + envoie message d'erreur.
-async function fetchProduct(){
+async function fetchProducts(){
     const r = await fetch('http://localhost:3000/api/products');
     if(r.ok === true){
         return r.json();
@@ -9,7 +9,7 @@ async function fetchProduct(){
 
 async function createProduct(){
 
-    let products = await fetchProduct();
+    let products = await fetchProducts();
     let items = document.getElementById('items');
     
     for(let product of products){

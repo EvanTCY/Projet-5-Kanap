@@ -49,16 +49,42 @@ async function getProductElements(){
 
 getProductElements();
 
-function addToCart(){
+async function addToCart(){
 
-    // contraintes
-    let optionValues = document.querySelectorAll('option');
-    let changeDefaultValue = document.getElementById("quantity");
-    console.log(changeDefaultValue);
-    changeDefaultValue.value = '1';
-    console.log(changeDefaultValue);
+    let product = await fetchProduct();
 
-}
+    let optionValue = document.getElementsByTagName('option');
+    let quantityValue = document.getElementById('quantity');
+    let addToCartButton = document.getElementById('addToCart');
+    let errorMessage = document.getElementsByClassName('item__content__settings__quantity');
+
+    let newP = document.createElement('p');
+    
+
+    quantityValue.value = '1';
+
+    console.log(optionValue.value);
+
+    addToCartButton.addEventListener('click', function(){
+        if(quantityValue.value <= 100 && quantityValue.value > 0){
+
+            addToCartButton.style.color = "green";
+
+            let localStorageProduct = {
+                id : productId,
+                quantity : quantityValue.value,
+                color : optionValue.value
+            }
+            let newLocalStorageProduct = JSON.stringify(localStorageProduct);
+            localStorage.setItem("product", newLocalStorageProduct);
+
+        }else{
+
+            addToCartButton.style.color = "red";
+
+        }
+    })
+}    
 addToCart();
 
 // POURQUOI LE "APPENCHILD" NE MARCHE PAS AVEC UN "GETELEMENTSBYCLASSENAME"

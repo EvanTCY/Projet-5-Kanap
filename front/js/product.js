@@ -12,6 +12,7 @@ async function fetchProduct(){
     } throw new Error ('le serveur ne répond pas')
 }
 
+
 async function getProductElements(){
 
     let product = await fetchProduct();
@@ -49,6 +50,7 @@ async function getProductElements(){
 
 getProductElements();
 
+
 async function addToCart(){
 
     let product = await fetchProduct();
@@ -73,7 +75,7 @@ async function addToCart(){
             let localStorageProduct = {
                 id : productId,
                 quantity : quantityValue.value,
-                color : optionValue.value
+                color : this.optionValue.value
             }
             let newLocalStorageProduct = JSON.stringify(localStorageProduct);
             localStorage.setItem("product", newLocalStorageProduct);

@@ -13,6 +13,7 @@ async function fetchProduct(){
 }
 
 
+// affichage des données du produit
 async function getProductElements(){
 
     let product = await fetchProduct();
@@ -34,7 +35,7 @@ async function getProductElements(){
     productPrice.innerText = product.price;
     productDescription.innerText = product.description;
 
-    // itération du options du produit
+    // itération des options du produit
     for(let colors of product.colors){
 
         let productOption = document.getElementById('colors');
@@ -44,49 +45,85 @@ async function getProductElements(){
         newOption.value = colors;
         newOption.innerText = colors;
   
-    }
-    
+    } 
 }
-
 getProductElements();
 
 
-async function addToCart(){
+// gestion du bouton "ajouter au panier" avec le local storage
+function addToLocalStorage(){
 
-    let product = await fetchProduct();
-
-    let optionValue = document.getElementsByTagName('option');
+    let optionValue = document.getElementById('colors');
     let quantityValue = document.getElementById('quantity');
     let addToCartButton = document.getElementById('addToCart');
-    let errorMessage = document.getElementsByClassName('item__content__settings__quantity');
-
-    let newP = document.createElement('p');
+    let errorNumberAndColor = document.getElementById('errorNumberAndColor');
+    let confirmationMessage = document.getElementById('confirmationMessage');
     
 
-    quantityValue.value = '1';
-
-    console.log(optionValue.value);
+    quantityValue.value = "1";
 
     addToCartButton.addEventListener('click', function(){
-        if(quantityValue.value <= 100 && quantityValue.value > 0){
+        if(quantityValue.value > 100 || quantityValue.value <= 0){
 
-            addToCartButton.style.color = "green";
+            // Affichage du message d'erreur
+            addToCartButton.style.color = "red";
+            errorNumberAndColor.style.display = "block";
+            confirmationMessage.style.display = "none";
+            
 
-            let localStorageProduct = {
-                id : productId,
-                quantity : quantityValue.value,
-                color : this.optionValue.value
-            }
-            let newLocalStorageProduct = JSON.stringify(localStorageProduct);
-            localStorage.setItem("product", newLocalStorageProduct);
+        }else if(optionValue.value === ""){
 
+            // Affichage du message d'erreur
+            addToCartButton.style.color = "red";
+            errorNumberAndColor.style.display = "block";
+            confirmationMessage.style.display = "none";
+        
         }else{
 
-            addToCartButton.style.color = "red";
+            // Affichage du message de confirmation d'ajout au panier
+            errorNumberAndColor.style.display = "none";
+            confirmationMessage.style.display = "block";
+            let timeOutRemoveConfirmation = setTimeout(function(){
+                confirmationMessage.style.display = "none";
+            }, 4000);
+            addToCartButton.style.color = "white";
+            
+            // gestion du local storage
+            function storProduct(){
+
+                // création du produit qui sera envoyé dans le local storage
+                let localStorageProduct = {
+                    id : productId,
+                    quantity : parseInt(quantityValue.value),
+                    color : optionValue.value
+                }
+
+                // création du tableau qui accueillera les produits dans le local storage
+                let productList;
+                let product = localStorage.getItem('product');
+                if(product == null){
+                    productList = [];
+                }else{
+                    productList = JSON.parse(product);
+                }
+
+                // gestion de la quantité pour un produit déjà existant dans le local storage
+                let availableProduct = productList.find( p => p.id == localStorageProduct.id && p.color == localStorageProduct.color )
+                if(availableProduct != undefined){
+                    availableProduct.quantity = availableProduct.quantity + localStorageProduct.quantity; 
+                }else{
+                    productList.push(localStorageProduct);
+                }   
+
+                // création de l'item dans le local storage
+                let newLocalStorageProduct = JSON.stringify(productList);
+                localStorage.setItem('product', newLocalStorageProduct);
+
+            }
+            storProduct();
 
         }
     })
 }    
-addToCart();
+addToLocalStorage();
 
-// POURQUOI LE "APPENCHILD" NE MARCHE PAS AVEC UN "GETELEMENTSBYCLASSENAME"

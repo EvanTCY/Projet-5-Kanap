@@ -11,6 +11,7 @@ async function createProduct(){
 
     let products = await fetchProducts();
     let items = document.getElementById('items');
+    console.table(products);
     
     for(let product of products){
     

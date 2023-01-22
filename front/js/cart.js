@@ -1,84 +1,103 @@
-function getProduct(){
-    let product = localStorage.getItem('product');
-    if(product == null){
+// récupération des produits dans le local storage
+function getProductsFromLocalStorage(){
+    let products = localStorage.getItem('product');
+    if(products == null){
         return [];
     }else{
-        return JSON.parse(product);
+        return JSON.parse(products);
     }
 }
 
-async function fetchProduct(){
-    const r = await fetch("http://localhost:3000/api/products/"+getProduct().id);
+
+// récupération d'un produit de l'api en particulier, via son id situé dans le local storage
+async function fetchProduct(id){
+    const r = await fetch("http://localhost:3000/api/products/" + id);
     if(r.ok === true){
         return r.json();
     } throw new Error ('le serveur ne répond pas')
 };
 
 
-async function productAdded(){
+async function setCartProducts(){
 
-    let productCart = await fetchProduct();
-    console.table(productCart);
+    let localStorageProducts = getProductsFromLocalStorage();
 
- 
+    for(let product of localStorageProducts){
 
-    let article = document.createElement('article');
-    document.getElementById('cart__items').appendChild(article);
-    article.className = 'cart__item';
+        let productFromApi = await fetchProduct(product.id);
 
+        // création du produit tel qu'il sera présenté dans le panier
+        let cartProductBody = `<div class="cart__item__img">
+          <img src="${productFromApi.imageUrl}" alt="${productFromApi.altTxt}">
+        </div>
+        <div class="cart__item__content">
+          <div class="cart__item__content__description">
+            <h2>${productFromApi.name}</h2>
+            <p>${product.color}</p>
+            <p>${productFromApi.price} €</p>
+          </div>
+          <div class="cart__item__content__settings">
+            <div class="cart__item__content__settings__quantity">
+              <p>Quantité :</p>
+              <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100" value=${product.quantity}>
+            </div>
+            <div class="cart__item__content__settings__delete">
+              <p class="deleteItem">Supprimer</p>
+            </div>
+          </div>
+        </div>`;
 
-    let divImg = document.createElement('div');
-    article.appendChild(divImg);
-    divImg.className = 'cart__item__img';
-
-    let img = document.createElement('img');;
-    divImg.appendChild(img);
-    img.src = productCart.imageUrl;
-    img.alt = productCart.altTxt;
-
-
-    let divContent = document.createElement('div');
-    article.appendChild(divContent);
-    divContent.className = "cart__item__content";
-
-    let divDescription = document.createElement('div');
-    divContent.appendChild(divDescription);
-    divDescription.className = 'cart__item__content__description';
-
-    let productName = document.createElement('h2');
-    divDescription.appendChild(productName);
-    productName.innerText = productCart.name;
-
-    let productColor = document.createElement('p');
-    divDescription.appendChild(productColor);
-
-    let productPrice = document.createElement('p');
-    divDescription.appendChild(productPrice);
-    productPrice.innerText = productCart.price + "€";
-
-    // let divSettings = document.createElement('div');
-    // divContent.appendChild(divDescription);
-    // divDescription.className = 'cart__item__content__settings';
-
-    // let divQuantity = document.createElement('div');
-    // divSettings.appendChild(divQuantity);
-    // divQuantity.className = 'cart__item__content__settings__quantity';
-
-    // let productQuantity = document.createElement('p');
-    // divQuantity.appendChild(productQuantity);
-    // productQuantity.innerText = "Qté";
-
-
-    
-
-
-   
-
-
-
-    
-
-
+        // création de la balise article pour y insérer "cartProductBody" via un "innerHTML"
+        let newArticle = document.createElement('article');
+        newArticle.classList.add('cart__item')
+        newArticle.setAttribute("data-id", product.id)
+        newArticle.setAttribute("data-color", product.color)
+        newArticle.innerHTML = cartProductBody;
+        document.getElementById('cart__items').appendChild(newArticle)
+    }
 }
+setCartProducts();
 
-productAdded();
+
+
+        // let productToStoreInCArt = document.getElementById('cart__items').innerHTML = article;
+
+        // if(cart == null ){
+        //     cart = [];
+        //     cart.push(productToStoreInCArt);
+        // }else{
+        //     cart.push(productToStoreInCArt);
+        // }
+        
+
+       // let article = `<article class="cart__item" data-id="${product.id}" data-color="${product.color}">
+        //     <div class="cart__item__img">
+        //       <img src="${productFromApi.imageUrl}" alt="${productFromApi.altTxt}">
+        //     </div>
+        //     <div class="cart__item__content">
+        //       <div class="cart__item__content__description">
+        //         <h2>${productFromApi.name}</h2>
+        //         <p>${product.color}</p>
+        //         <p>${productFromApi.price} €</p>
+        //       </div>
+        //       <div class="cart__item__content__settings">
+        //         <div class="cart__item__content__settings__quantity">
+        //           <p>Quantité :</p>
+        //           <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100" value=${product.quantity}>
+        //         </div>
+        //         <div class="cart__item__content__settings__delete">
+        //           <p class="deleteItem">Supprimer</p>
+        //         </div>
+        //       </div>
+        //     </div>
+        //   </article>`;
+
+
+
+
+
+
+
+
+
+

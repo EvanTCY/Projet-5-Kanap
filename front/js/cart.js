@@ -47,7 +47,7 @@ async function setCartProducts(){
           </div>
         </div>`;
 
-        // création de la balise article pour y insérer "cartProductBody" via un "innerHTML"
+        // création de la balise article pour y insérer "cartProductBody" via un innerHTML
         let newArticle = document.createElement('article');
         newArticle.classList.add('cart__item')
         newArticle.setAttribute("data-id", product.id)
@@ -59,16 +59,55 @@ async function setCartProducts(){
 setCartProducts();
 
 
+async function setTotalCartPrice(){
 
-        // let productToStoreInCArt = document.getElementById('cart__items').innerHTML = article;
+  let localStorageProducts = getProductsFromLocalStorage();
+  let totalPrice = document.getElementById('totalPrice');
+  let totalCartPrice = 0;
+   
+  if(localStorageProducts === []){
+    totalQuantity.innerText = '0';
+  }else{
+    for(let product of localStorageProducts){
+      let productFromApi = await fetchProduct(product.id);
+      totalCartPrice += product.quantity * productFromApi.price;
+      totalPrice.innerText = totalCartPrice;
+    } 
+  }
+}
+setTotalCartPrice();
 
-        // if(cart == null ){
-        //     cart = [];
-        //     cart.push(productToStoreInCArt);
-        // }else{
-        //     cart.push(productToStoreInCArt);
-        // }
-        
+
+function setProductsCartNumber(){
+
+  let localStorageProducts = getProductsFromLocalStorage();
+  let totalQuantity = document.getElementById('totalQuantity');
+  let totalProductsNumber = 0;
+   
+  if(localStorageProducts === []){
+    totalQuantity.innerText = '0';
+  }else{
+    for(let product of localStorageProducts){
+      totalProductsNumber += product.quantity;
+      totalQuantity.innerText = totalProductsNumber;
+    } 
+  }
+}
+setProductsCartNumber();
+
+
+function removeProductFromCart(){
+
+  let removeButton = document.querySelectorAll('.deleteItem');
+
+  removeButton.addEventListener('click', function(){
+
+    localStorage.removeItem('product');
+
+  })
+}
+removeProductFromCart();
+
 
        // let article = `<article class="cart__item" data-id="${product.id}" data-color="${product.color}">
         //     <div class="cart__item__img">

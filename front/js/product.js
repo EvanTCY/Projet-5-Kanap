@@ -17,10 +17,9 @@ async function fetchProduct(){
 async function getProductElements(){
 
     let product = await fetchProduct();
-    console.table(product);
 
     // localisation des éléments parents pour y intégrer le contenu
-    let itemImg = document.querySelector('.item__img');  /*QUESTION TOUT EN BAS, POUR CETTE LIGNE*/
+    let itemImg = document.querySelector('.item__img');  
     let productTitle = document.getElementById('title');
     let productPrice = document.getElementById('price');
     let productDescription = document.getElementById('description');
@@ -50,19 +49,54 @@ async function getProductElements(){
 getProductElements();
 
 
-// gestion du bouton "ajouter au panier" avec le local storage
+/* création des variables utiles aux 2 fonctions ci-dessous*/
+let optionValue = document.getElementById('colors'); 
+let addToCartButton = document.getElementById('addToCart');
+let errorNumberAndColor = document.getElementById('errorNumberAndColor');
+let confirmationMessage = document.getElementById('confirmationMessage');
+let quantityValue = document.getElementById('quantity');
+quantityValue.value = "1";
+/* création des variables utiles aux 2 fonctions ci-dessous*/
+
+
+// ajout des produits dans le local storage
+function storProduct(){
+
+    // création du produit qui sera envoyé dans le local storage
+    let localStorageProduct = {
+        id : productId,
+        quantity : parseInt(quantityValue.value),
+        color : optionValue.value
+    }
+
+    // création du tableau qui accueillera les produits dans le local storage
+    let productList;
+    let product = localStorage.getItem('product');
+    if(product == null){
+        productList = [];
+    }else{
+        productList = JSON.parse(product);
+    }
+
+    // gestion de la quantité pour un produit déjà existant dans le local storage
+    let availableProduct = productList.find( p => p.id == localStorageProduct.id && p.color == localStorageProduct.color )
+    if(availableProduct != undefined){
+        availableProduct.quantity = availableProduct.quantity + localStorageProduct.quantity; 
+    }else{
+        productList.push(localStorageProduct);
+    }   
+
+    // création de l'item dans le local storage
+    let newLocalStorageProduct = JSON.stringify(productList);
+    localStorage.setItem('product', newLocalStorageProduct); 
+}
+
+
+// gestion des conditions du bouton "ajouter au panier" + appel de "storProduct()" pour ajouter les produits au local storage
 function addToLocalStorage(){
 
-    let optionValue = document.getElementById('colors');
-    let quantityValue = document.getElementById('quantity');
-    let addToCartButton = document.getElementById('addToCart');
-    let errorNumberAndColor = document.getElementById('errorNumberAndColor');
-    let confirmationMessage = document.getElementById('confirmationMessage');
-    
-
-    quantityValue.value = "1";
-
     addToCartButton.addEventListener('click', function(){
+
         if(quantityValue.value > 100 || quantityValue.value <= 0){
 
             // Affichage du message d'erreur
@@ -83,43 +117,12 @@ function addToLocalStorage(){
             // Affichage du message de confirmation d'ajout au panier
             errorNumberAndColor.style.display = "none";
             confirmationMessage.style.display = "block";
-            let timeOutRemoveConfirmation = setTimeout(function(){
+            let removeConfirmation = setTimeout(function(){
                 confirmationMessage.style.display = "none";
             }, 4000);
             addToCartButton.style.color = "white";
             
-            // gestion du local storage
-            function storProduct(){
-
-                // création du produit qui sera envoyé dans le local storage
-                let localStorageProduct = {
-                    id : productId,
-                    quantity : parseInt(quantityValue.value),
-                    color : optionValue.value
-                }
-
-                // création du tableau qui accueillera les produits dans le local storage
-                let productList;
-                let product = localStorage.getItem('product');
-                if(product == null){
-                    productList = [];
-                }else{
-                    productList = JSON.parse(product);
-                }
-
-                // gestion de la quantité pour un produit déjà existant dans le local storage
-                let availableProduct = productList.find( p => p.id == localStorageProduct.id && p.color == localStorageProduct.color )
-                if(availableProduct != undefined){
-                    availableProduct.quantity = availableProduct.quantity + localStorageProduct.quantity; 
-                }else{
-                    productList.push(localStorageProduct);
-                }   
-
-                // création de l'item dans le local storage
-                let newLocalStorageProduct = JSON.stringify(productList);
-                localStorage.setItem('product', newLocalStorageProduct);
-
-            }
+            // ajout des produit dans le local storage
             storProduct();
 
         }

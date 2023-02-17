@@ -64,6 +64,7 @@ async function setCartProducts(){
     }
   }
   removeProductFromCart();
+  modifyProductsQuantity();
 }
 setCartProducts();
 
@@ -120,26 +121,50 @@ function removeProductFromCart(){
 
     products = products.filter(product => product.id !== clickedButtonProductId || product.color !== clickedButtonProductColor);
     let newProducts = JSON.stringify(products);
-    localStorage.setItem('product', newProducts)
+    localStorage.setItem('product', newProducts);
+
+    // location.reload();
   }))
 }
 
 
+function modifyProductsQuantity(){
+
+  let quantityInput = document.querySelectorAll('.itemQuantity');
+  let products = getProductsFromLocalStorage();
+
+  quantityInput.forEach(input => input.addEventListener('change', function(){
+
+    let newQuantity = input.value;
+    let articleBalise = input.closest('article');
+    let clickedButtonProductId = articleBalise.getAttribute('data-id');
+    let clickedButtonProductColor = articleBalise.getAttribute('data-color');
+
+    let selectedProduct = products.find(product => product.id === clickedButtonProductId || product.color == clickedButtonProductColor);
+    products = products.filter(product => product.id !== clickedButtonProductId || product.color !== clickedButtonProductColor);
+    selectedProduct.quantity = newQuantity;
+    products.push(selectedProduct);
+    console.table(products)
+
+    let newProducts = JSON.stringify(products);
+    localStorage.setItem('product', newProducts);
+
+  }))
+}
+
+
+let nameInput = document.getElementById('firstName');
+let lastNameInput = document.getElementById('lastName');
+let addressInput = document.getElementById('address');
+let cityInput = document.getElementById('city');
+let emailInput = document.getElementById('email');
+
 function isValidForm(){
 
-  let nameInput = document.getElementById('firstName');
   let nameRegex = /^[A-Z][A-Za-z\é\è\ê\-]+$/;
-
-  let lastNameInput = document.getElementById('lastName');
   let lastNameRegex = /^[A-Z][A-Za-z\é\è\ê\-]+$/;
-
-  let addressInput = document.getElementById('address');
   let addressRegex = /^[A-Z][A-Za-z\é\è\ê\-]+$/;
-
-  let cityInput = document.getElementById('city');
   let cityRegex = /^[A-Z][A-Za-z\é\è\ê\-]+$/;
-
-  let emailInput = document.getElementById('email');
   let emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
 
   let styleError = "solid red 2px";
@@ -181,14 +206,46 @@ function isValidForm(){
       return true   
 }
 
-function getOrder(){
+
+async function postProductsAndUsersInformations(){
+
+  let products = getProductsFromLocalStorage();
+  let contact = {
+    contact : {
+    firstName : nameInput.value,
+    lastName : lastNameInput.value,
+    address : addressInput.value,
+    city : cityInput.value,
+    email : emailInput.value
+  },
+  cartProducts : products
+};  
+
+let fetchOption =  {
+  method: 'POST',
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(contact)
+}
+
+  let response =  await fetch('http://localhost:3000/api/products/order', fetchOption);
+
+  let result = await response.json();
+  console.log(result)
+}
+
+
+
+async function getOrder(){
 
   document.getElementById('order').addEventListener('click', function(e){
 
     e.preventDefault();
 
     if(isValidForm()){
-
+      postProductsAndUsersInformations()
       console.log('ok')
     }
   })
@@ -196,8 +253,8 @@ function getOrder(){
 getOrder();
 
 
-        /*TASKS :
+        /*TASKS  :
         * rendre la page dynamique (changement de prix et nbr article lors de modification du nombre d'article ou suppression, faire disparaitre article lors de sa suppression)
-        * Trouver des regex plus adéquat et précis et les comprendres
+        * Trouver des regex plus adéquat et plus précis et les comprendres
         * mettre en place requête post
         */

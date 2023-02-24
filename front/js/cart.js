@@ -1,6 +1,6 @@
 // récupération des produits dans le local storage
 function getProductsFromLocalStorage(){
-    let products = localStorage.getItem('product');
+    let products = localStorage.getItem('products');
     if(products == null){
         return [];
     }else{
@@ -14,22 +14,16 @@ async function fetchProduct(id){
     const r = await fetch("http://localhost:3000/api/products/" + id);
     if(r.ok === true){
         return r.json();
-    } throw new Error ('le serveur ne répond pas')
+    } throw new Error ('le serveur ne répond pas');
 };
 
 
+// Affichage des produits présent dans le local storage, sur la page panier
 async function setCartProducts(){
 
-    let localStorageProducts = getProductsFromLocalStorage();
+    let productsFromLocalStorage = getProductsFromLocalStorage();
 
-    if(localStorageProducts.length == 0){
-
-      document.querySelector('h1')
-        .innerText = 'Votre panier est vide';
-
-    }else{
-
-      for(let product of localStorageProducts){
+      for(let product of productsFromLocalStorage){
 
         let productFromApi = await fetchProduct(product.id);
 
@@ -56,60 +50,65 @@ async function setCartProducts(){
 
         // création de la balise article pour y insérer "cartProductBody" via un innerHTML
         let newArticle = document.createElement('article');
-        newArticle.classList.add('cart__item')
-        newArticle.setAttribute("data-id", product.id)
-        newArticle.setAttribute("data-color", product.color)
+        newArticle.classList.add('cart__item');
+        newArticle.setAttribute("data-id", product.id);
+        newArticle.setAttribute("data-color", product.color);
         newArticle.innerHTML = cartProductBody;
-        document.getElementById('cart__items').appendChild(newArticle)
+        document.getElementById('cart__items').appendChild(newArticle);
     }
-  }
+    
   removeProductFromCart();
   modifyProductsQuantity();
 }
 setCartProducts();
 
 
-async function setTotalCartPrice(){
+// remise à niveau du prix et du nombre d'article affichés sur la page, en prenant compte du local storage 
+async function updateTotalCartPriceAndArticle(){
 
-  let localStorageProducts = getProductsFromLocalStorage();
-  let totalPrice = document.getElementById('totalPrice');
-  let totalCartPrice = 0;
-   
-  if(localStorageProducts.length == 0){
-    totalPrice.innerText = '0';
+  let productsFromLocalStorage = getProductsFromLocalStorage();
+
+  let cartTitlte = document.querySelector('h1');
+
+  let includeTotalPrice = document.getElementById('totalPrice');
+  let totalPrice = 0;
+
+  let includeTotalQuantity = document.getElementById('totalQuantity');
+  let totalQuantity = 0;
+
+  // dans le cas où le local storage serait vide
+  if(productsFromLocalStorage.length == 0){
+
+    cartTitlte.innerText = 'Votre panier est vide';
+    includeTotalPrice.innerText = 0;
+    includeTotalQuantity.innerText = 0;
+
+  // dans le cas où le local storage serait remplit 
   }else{
-    for(let product of localStorageProducts){
+
+    cartTitlte.innerText = 'Votre panier';
+
+    for(let product of productsFromLocalStorage){
+
+      // calcul du prix total
       let productFromApi = await fetchProduct(product.id);
-      totalCartPrice += product.quantity * productFromApi.price;
-      totalPrice.innerText = totalCartPrice;
+      totalPrice += parseInt(product.quantity) * productFromApi.price;
+      includeTotalPrice.innerText = totalPrice;
+
+      // calcul du nombre total d'article
+      totalQuantity += parseInt(product.quantity);
+      includeTotalQuantity.innerText = totalQuantity;
     } 
   }
 }
-setTotalCartPrice();
+updateTotalCartPriceAndArticle();
 
 
-function setProductsCartNumber(){
-
-  let localStorageProducts = getProductsFromLocalStorage();
-  let totalQuantity = document.getElementById('totalQuantity');
-  let totalProductsNumber = 0;
-   
-  if(localStorageProducts.length == 0){
-    totalQuantity.innerText = '0';
-  }else{
-    for(let product of localStorageProducts){
-      totalProductsNumber += product.quantity;
-      totalQuantity.innerText = totalProductsNumber;
-    } 
-  }
-}
-setProductsCartNumber();
-
-
+// suppression des produits au clic sur le bouton "supprimer"
 function removeProductFromCart(){
   
   let removeButtons = document.querySelectorAll('.deleteItem');
-  let products = getProductsFromLocalStorage();
+  let productsFromLocalStorage = getProductsFromLocalStorage();
 
   removeButtons.forEach(button => button.addEventListener('click', function(){
 
@@ -117,21 +116,28 @@ function removeProductFromCart(){
     let clickedButtonProductId = articleBalise.getAttribute('data-id');
     let clickedButtonProductColor = articleBalise.getAttribute('data-color');
 
-    articleBalise.style.display = 'none';
+    // suppression de l'affichage des produits, sur la page panier
+    articleBalise.remove();
 
-    products = products.filter(product => product.id !== clickedButtonProductId || product.color !== clickedButtonProductColor);
-    let newProducts = JSON.stringify(products);
-    localStorage.setItem('product', newProducts);
+    // supression des produits présents dans le local storage
+    let selectedProduct = productsFromLocalStorage.find(product => product.id === clickedButtonProductId && product.color == clickedButtonProductColor);
+    productsFromLocalStorage = productsFromLocalStorage.filter(product => product !== selectedProduct);
 
-    // location.reload();
+    let newProducts = JSON.stringify(productsFromLocalStorage);
+    localStorage.setItem('products', newProducts);
+
+    // mise à jour des quantités et prix totaux
+    updateTotalCartPriceAndArticle();
   }))
+
 }
 
 
+// remplacement des quantités du local storage par les quantités saisies
 function modifyProductsQuantity(){
 
   let quantityInput = document.querySelectorAll('.itemQuantity');
-  let products = getProductsFromLocalStorage();
+  let productsFromLocalStorage = getProductsFromLocalStorage();
 
   quantityInput.forEach(input => input.addEventListener('change', function(){
 
@@ -140,25 +146,33 @@ function modifyProductsQuantity(){
     let clickedButtonProductId = articleBalise.getAttribute('data-id');
     let clickedButtonProductColor = articleBalise.getAttribute('data-color');
 
-    let selectedProduct = products.find(product => product.id === clickedButtonProductId || product.color == clickedButtonProductColor);
-    products = products.filter(product => product.id !== clickedButtonProductId || product.color !== clickedButtonProductColor);
-    selectedProduct.quantity = newQuantity;
-    products.push(selectedProduct);
-    console.table(products)
 
-    let newProducts = JSON.stringify(products);
-    localStorage.setItem('product', newProducts);
+    productsFromLocalStorage.forEach((product) => {
+      // si l'id et la couleur du produit présent dans le local storage correspondent à ceux du produit sélectionné, alors modifier sa quantité
+      if(clickedButtonProductColor === product.color && product.id === clickedButtonProductId){
+          product.quantity = newQuantity;
+      }
+    })
 
+    let newProducts = JSON.stringify(productsFromLocalStorage);
+    localStorage.setItem('products', newProducts);
+
+    // mise à jour des quantités et prix totaux
+    updateTotalCartPriceAndArticle();
   }))
 }
 
 
+/* création des variables utiles aux fonctions ci-dessous*/
 let nameInput = document.getElementById('firstName');
 let lastNameInput = document.getElementById('lastName');
 let addressInput = document.getElementById('address');
 let cityInput = document.getElementById('city');
 let emailInput = document.getElementById('email');
+/* fin de création des variables utiles aux fonctions ci-dessous*/
 
+
+// création des regex qui permettront de valider le formulaire
 function isValidForm(){
 
   let nameRegex = /^[A-Z][A-Za-z\é\è\ê\-]+$/;
@@ -190,52 +204,41 @@ function isValidForm(){
       document.getElementById('emailErrorMsg').innerText = "Votre email n'est pas valide";
       return false;
     }
-    // else{
-    //   nameInput.style.border = "none";
-    //   lastNameInput.style.border = "none";
-    //   addressInput.style.border = "none";
-    //   cityInput.style.border = "none";
-    //   emailInput.style.border = "none";
-
-    //   document.getElementById('firstNameErrorMsg').innerText = "";
-    //   document.getElementById('lastNameErrorMsg').innerText = "";
-    //   document.getElementById('addressErrorMsg').innerText = "";
-    //   document.getElementById('cityErrorMsg').innerText = "";
-    //   document.getElementById('emailErrorMsg').innerText = "";
-
-      return true   
+    return true   
 }
 
 
+// création de la requête POST + redirection vers la page "confirmation"
 async function postProductsAndUsersInformations(){
 
-  let products = getProductsFromLocalStorage();
-  let contact = {
+  let cartProductsId = getProductsFromLocalStorage().map(product => product.id);
+  let clientOrder = {
     contact : {
-    firstName : nameInput.value,
-    lastName : lastNameInput.value,
-    address : addressInput.value,
-    city : cityInput.value,
-    email : emailInput.value
-  },
-  cartProducts : products
-};  
+      firstName : nameInput.value,
+      lastName : lastNameInput.value,
+      address : addressInput.value,
+      city : cityInput.value,
+      email : emailInput.value
+    },
+      products : cartProductsId
+  };
 
-let fetchOption =  {
+let fetchOptions =  {
   method: 'POST',
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json'
   },
-  body: JSON.stringify(contact)
+  body: JSON.stringify(clientOrder)
 }
 
-  let response =  await fetch('http://localhost:3000/api/products/order', fetchOption);
-
+  let response =  await fetch('http://localhost:3000/api/products/order', fetchOptions);
   let result = await response.json();
-  console.log(result)
+  
+  // redirection vers la page "confirmation", en incluant l'id de la commande dans l'url
+  let orderId = result.orderId;
+  window.location = `confirmation.html?id=${orderId}`
 }
-
 
 
 async function getOrder(){
@@ -245,16 +248,9 @@ async function getOrder(){
     e.preventDefault();
 
     if(isValidForm()){
-      postProductsAndUsersInformations()
-      console.log('ok')
+      postProductsAndUsersInformations();
+      localStorage.removeItem('products');
     }
   })
 }
 getOrder();
-
-
-        /*TASKS  :
-        * rendre la page dynamique (changement de prix et nbr article lors de modification du nombre d'article ou suppression, faire disparaitre article lors de sa suppression)
-        * Trouver des regex plus adéquat et plus précis et les comprendres
-        * mettre en place requête post
-        */

@@ -14,7 +14,7 @@ async function fetchProduct(){
     } throw new Error ('le serveur ne répond pas')
 }
 
-
+ 
 // affichage des données du produit
 async function getProductElements(){
 
@@ -125,7 +125,6 @@ function addToLocalStorage(){
             
             // ajout du produit dans le local storage
             storProduct();
-
         }
     })
 }    

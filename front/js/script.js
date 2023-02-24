@@ -1,4 +1,4 @@
-// fonction fetch + convertion des données en format .json + envoie message d'erreur.
+// Appel de l'api pour récupérer les produits
 async function fetchProducts(){
     const r = await fetch('http://localhost:3000/api/products');
     if(r.ok === true){
@@ -7,13 +7,14 @@ async function fetchProducts(){
 }
 
 
-async function createProduct(){
+// création et intégration des produits, dans la page
+async function createProducts(){
 
-    let products = await fetchProducts();
+    let productsFromApi = await fetchProducts();
     let items = document.getElementById('items');
-    console.table(products);
+    console.table(productsFromApi);
     
-    for(let product of products){
+    for(let product of productsFromApi){
     
         // construction des balises            
         let newA = document.createElement("a");
@@ -43,9 +44,6 @@ async function createProduct(){
         newArticle.appendChild(newP);
         newA.appendChild(newArticle);
         items.appendChild(newA);
-
     }; 
-    
 };
-
-createProduct()
+createProducts()

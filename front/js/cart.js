@@ -150,6 +150,7 @@ function modifyProductsQuantity(){
     let clickedButtonProductId = articleBalise.getAttribute('data-id');
     let clickedButtonProductColor = articleBalise.getAttribute('data-color');
 
+
     let productsFromLocalStorage = getProductsFromLocalStorage(); 
     productsFromLocalStorage.forEach((product) => {
   
@@ -181,7 +182,7 @@ let emailInput = document.getElementById('email');
 function isValidForm(){
 
   const namesRegex = /^[a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]+$/u;
-  const adressRegex = /^[a-zA-Z0-9áâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]+$/gi;
+  const adressRegex = /^[a-zA-Z0-9áâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]+$/u;
   const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
 
   const styleError = "solid red 2px";

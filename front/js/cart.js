@@ -1,7 +1,7 @@
 // récupération des produits dans le local storage
 function getProductsFromLocalStorage(){
     let products = localStorage.getItem('products');
-    if(products == null){
+    if(products === null){
         return [];
     }else{
         return JSON.parse(products);
@@ -25,7 +25,7 @@ async function setCartProducts(){
 
       for(let product of productsFromLocalStorage){
 
-        let productFromApi = await fetchProduct(product.id);
+        const productFromApi = await fetchProduct(product.id);
 
         // création du produit tel qu'il sera présenté dans le panier
         let cartProductBody = `<div class="cart__item__img">
@@ -108,9 +108,10 @@ updateTotalCartPriceAndArticle();
 function removeProductFromCart(){
   
   let removeButtons = document.querySelectorAll('.deleteItem');
-  let productsFromLocalStorage = getProductsFromLocalStorage();
 
   removeButtons.forEach(button => button.addEventListener('click', function(){
+
+    let productsFromLocalStorage = getProductsFromLocalStorage();
 
     let articleBalise = button.closest('article');
     let clickedButtonProductId = articleBalise.getAttribute('data-id');
@@ -120,9 +121,13 @@ function removeProductFromCart(){
     articleBalise.remove();
 
     // supression des produits présents dans le local storage
-    let selectedProduct = productsFromLocalStorage.find(product => product.id === clickedButtonProductId && product.color == clickedButtonProductColor);
-    productsFromLocalStorage = productsFromLocalStorage.filter(product => product !== selectedProduct);
+    let selectedProduct = productsFromLocalStorage.find(product => product.id === clickedButtonProductId && product.color === clickedButtonProductColor);
+    
+    let indexOfProduct = productsFromLocalStorage.indexOf(selectedProduct);
+    productsFromLocalStorage.splice(indexOfProduct, 1)
 
+
+    console.log(productsFromLocalStorage);
     let newProducts = JSON.stringify(productsFromLocalStorage);
     localStorage.setItem('products', newProducts);
 
@@ -137,7 +142,6 @@ function removeProductFromCart(){
 function modifyProductsQuantity(){
 
   let quantityInput = document.querySelectorAll('.itemQuantity');
-  let productsFromLocalStorage = getProductsFromLocalStorage();
 
   quantityInput.forEach(input => input.addEventListener('change', function(){
 
@@ -146,8 +150,9 @@ function modifyProductsQuantity(){
     let clickedButtonProductId = articleBalise.getAttribute('data-id');
     let clickedButtonProductColor = articleBalise.getAttribute('data-color');
 
-
+    let productsFromLocalStorage = getProductsFromLocalStorage(); 
     productsFromLocalStorage.forEach((product) => {
+  
       // si l'id et la couleur du produit présent dans le local storage correspondent à ceux du produit sélectionné, alors modifier sa quantité
       if(clickedButtonProductColor === product.color && product.id === clickedButtonProductId){
           product.quantity = newQuantity;
@@ -175,27 +180,25 @@ let emailInput = document.getElementById('email');
 // création des regex qui permettront de valider le formulaire
 function isValidForm(){
 
-  let nameRegex = /^[A-Z][A-Za-z\é\è\ê\-]+$/;
-  let lastNameRegex = /^[A-Z][A-Za-z\é\è\ê\-]+$/;
-  let addressRegex = /^[A-Z][A-Za-z\é\è\ê\-]+$/;
-  let cityRegex = /^[A-Z][A-Za-z\é\è\ê\-]+$/;
-  let emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+  const namesRegex = /^[a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]+$/u;
+  const adressRegex = /^[a-zA-Z0-9áâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]+$/gi;
+  const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
 
-  let styleError = "solid red 2px";
+  const styleError = "solid red 2px";
 
-    if(!nameRegex.test(nameInput.value)){
+    if(!namesRegex.test(nameInput.value)){
       nameInput.style.border = styleError;
       document.getElementById('firstNameErrorMsg').innerText = "Votre prénom n'est pas valide";
       return false;
-    }  if(!lastNameRegex.test(lastNameInput.value)){
+    }if(!namesRegex.test(lastNameInput.value)){
       lastNameInput.style.border = styleError;
       document.getElementById('lastNameErrorMsg').innerText = "Votre nom n'est pas valide";
       return false;
-    } if(!addressRegex.test(addressInput.value)){
+    }if(!adressRegex.test(addressInput.value)){
       addressInput.style.border = styleError;
       document.getElementById('addressErrorMsg').innerText = "Votre adresse n'est pas valide";
       return false;
-    } if(!cityRegex.test(cityInput.value)){
+    }if(!namesRegex.test(cityInput.value)){
       cityInput.style.border = styleError;
       document.getElementById('cityErrorMsg').innerText = "Votre ville n'est pas valide";
       return false;
@@ -211,7 +214,8 @@ function isValidForm(){
 // création de la requête POST + redirection vers la page "confirmation"
 async function postProductsAndUsersInformations(){
 
-  let cartProductsId = getProductsFromLocalStorage().map(product => product.id);
+  let productsFromLocalStorage = getProductsFromLocalStorage();
+  let cartProductsId = productsFromLocalStorage.map(product => product.id);
   let clientOrder = {
     contact : {
       firstName : nameInput.value,
@@ -220,7 +224,7 @@ async function postProductsAndUsersInformations(){
       city : cityInput.value,
       email : emailInput.value
     },
-      products : cartProductsId
+    products : cartProductsId
   };
 
 let fetchOptions =  {
@@ -232,14 +236,17 @@ let fetchOptions =  {
   body: JSON.stringify(clientOrder)
 }
 
-  let response =  await fetch('http://localhost:3000/api/products/order', fetchOptions);
-  let result = await response.json();
+  const response =  await fetch('http://localhost:3000/api/products/order', fetchOptions);
+  const result = await response.json();
   
   // redirection vers la page "confirmation", en incluant l'id de la commande dans l'url
   let orderId = result.orderId;
-  window.location = `confirmation.html?id=${orderId}`
+  if(localStorage.length !== 0){
+    window.location = `confirmation.html?id=${orderId}`;
+    localStorage.removeItem('products');
+  }
 }
-
+ 
 
 async function getOrder(){
 
@@ -249,7 +256,6 @@ async function getOrder(){
 
     if(isValidForm()){
       postProductsAndUsersInformations();
-      localStorage.removeItem('products');
     }
   })
 }

@@ -1,28 +1,26 @@
-// récupération de l'id du produit via le lien de la page
-function getProductId(){
-    let productPageUrl = window.location.href;
-    let url = new URL(productPageUrl);
-    let productId = url.searchParams.get("id");
-    return productId;
-}
+// récupération de l'id produit via le lien de la page
+let urlProductPage = window.location.href;
+let url = new URL(urlProductPage);
+let productId = url.searchParams.get("id");
 
-// Appel de l'api pour récupérer les caractéristiques d'un produit en particulier, via son id
+
+// fonction fetch + convertion des données en format .json + envoie message d'erreur.
 async function fetchProduct(){
-    const r = await fetch("http://localhost:3000/api/products/"+getProductId());
+    const r = await fetch("http://localhost:3000/api/products/"+productId);
     if(r.ok === true){
         return r.json();
     } throw new Error ('le serveur ne répond pas')
 }
 
- 
+
 // affichage des données du produit
 async function getProductElements(){
 
-    let productFromApi = await fetchProduct();
-    console.table(productFromApi);
+    let product = await fetchProduct();
+    console.table(product);
 
     // localisation des éléments parents pour y intégrer le contenu
-    let itemImg = document.querySelector('.item__img'); 
+    let itemImg = document.querySelector('.item__img');  /*QUESTION TOUT EN BAS, POUR CETTE LIGNE*/
     let productTitle = document.getElementById('title');
     let productPrice = document.getElementById('price');
     let productDescription = document.getElementById('description');
@@ -31,82 +29,49 @@ async function getProductElements(){
     itemImg.appendChild(newImg);
 
     // intégration des informations sur le produit
-    newImg.src = productFromApi.imageUrl;
-    newImg.alt = productFromApi.altTxt;
-    productTitle.innerText = productFromApi.name;
-    productPrice.innerText = productFromApi.price;
-    productDescription.innerText = productFromApi.description;
+    newImg.src = product.imageUrl;
+    newImg.alt = product.altTxt;
+    productTitle.innerText = product.name;
+    productPrice.innerText = product.price;
+    productDescription.innerText = product.description;
 
     // itération des options du produit
-    for(let colors of productFromApi.colors){
+    for(let colors of product.colors){
 
-        let productColors = document.getElementById('colors');
-        let newColor = document.createElement('option')
-        productColors.appendChild(newColor);
+        let productOption = document.getElementById('colors');
+        let newOption = document.createElement('option')
+        productOption.appendChild(newOption);
 
-        newColor.value = colors;
-        newColor.innerText = colors;
+        newOption.value = colors;
+        newOption.innerText = colors;
+  
     } 
 }
 getProductElements();
 
 
-/* création des variables utiles aux 2 fonctions ci-dessous*/
-let productColor = document.getElementById('colors'); 
-let addToCartButton = document.getElementById('addToCart');
-let errorNumberAndColor = document.getElementById('errorNumberAndColor');
-let confirmationMessage = document.getElementById('confirmationMessage');
-let selectedQuantity = document.getElementById('quantity');
-selectedQuantity.value = "1";
-/* fin de création des variables utiles aux 2 fonctions ci-dessous*/
-
-
-// ajout du produit dans le local storage
-function storProduct(){
-
-    // création du produit qui sera envoyé dans le local storage
-    let localStorageProduct = {
-        id : getProductId(),
-        quantity : parseInt(selectedQuantity.value),
-        color : productColor.value
-    }
-
-    // création du tableau qui accueillera les produits dans le local storage
-    let productList;
-    let productsFromLocalStorage = localStorage.getItem('products');
-    if(productsFromLocalStorage == null){
-        productList = [];
-    }else{
-        productList = JSON.parse(productsFromLocalStorage);
-    }
-
-    // gestion de la quantité pour un produit déjà existant dans le local storage
-    let availableProduct = productList.find( p => p.id == localStorageProduct.id && p.color == localStorageProduct.color )
-    if(availableProduct != undefined){
-        availableProduct.quantity = availableProduct.quantity + localStorageProduct.quantity; 
-    }else{
-        productList.push(localStorageProduct);
-    }   
-
-    // création de l'item dans le local storage
-    let newLocalStorageProduct = JSON.stringify(productList);
-    localStorage.setItem('products', newLocalStorageProduct); 
-}
-
-
-// gestion des conditions du bouton "ajouter au panier" + appel de "storProduct()" pour ajouter les produits dans le local storage
+// gestion du bouton "ajouter au panier" avec le local storage
 function addToLocalStorage(){
 
-    addToCartButton.addEventListener('click', function(){
+    let optionValue = document.getElementById('colors');
+    let quantityValue = document.getElementById('quantity');
+    let addToCartButton = document.getElementById('addToCart');
+    let errorNumberAndColor = document.getElementById('errorNumberAndColor');
+    let confirmationMessage = document.getElementById('confirmationMessage');
+    
 
-        if(selectedQuantity.value > 100 || selectedQuantity.value <= 0){
+    quantityValue.value = "1";
+
+    addToCartButton.addEventListener('click', function(){
+        if(quantityValue.value > 100 || quantityValue.value <= 0){
 
             // Affichage du message d'erreur
             addToCartButton.style.color = "red";
             errorNumberAndColor.style.display = "block";
             confirmationMessage.style.display = "none";
+            
 
-        }else if(productColor.value === ""){
+        }else if(optionValue.value === ""){
 
             // Affichage du message d'erreur
             addToCartButton.style.color = "red";
@@ -118,13 +83,45 @@ function addToLocalStorage(){
             // Affichage du message de confirmation d'ajout au panier
             errorNumberAndColor.style.display = "none";
             confirmationMessage.style.display = "block";
-            let removeConfirmation = setTimeout(function(){
+            let timeOutRemoveConfirmation = setTimeout(function(){
                 confirmationMessage.style.display = "none";
-            }, 2500);
+            }, 4000);
             addToCartButton.style.color = "white";
             
-            // ajout du produit dans le local storage
+            // gestion du local storage
+            function storProduct(){
+
+                // création du produit qui sera envoyé dans le local storage
+                let localStorageProduct = {
+                    id : productId,
+                    quantity : parseInt(quantityValue.value),
+                    color : optionValue.value
+                }
+
+                // création du tableau qui accueillera les produits dans le local storage
+                let productList;
+                let product = localStorage.getItem('product');
+                if(product == null){
+                    productList = [];
+                }else{
+                    productList = JSON.parse(product);
+                }
+
+                // gestion de la quantité pour un produit déjà existant dans le local storage
+                let availableProduct = productList.find( p => p.id == localStorageProduct.id && p.color == localStorageProduct.color )
+                if(availableProduct != undefined){
+                    availableProduct.quantity = availableProduct.quantity + localStorageProduct.quantity; 
+                }else{
+                    productList.push(localStorageProduct);
+                }   
+
+                // création de l'item dans le local storage
+                let newLocalStorageProduct = JSON.stringify(productList);
+                localStorage.setItem('product', newLocalStorageProduct);
+
+            }
             storProduct();
+
         }
     })
 }    
